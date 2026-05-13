@@ -1,83 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ComicForge — Admin</title>
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <title>ComicForge Studio</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet"/>
 </head>
 <body>
 
-  <header>
-    <div class="header-inner">
-      <div class="logo">
-        <span class="logo-icon">📖</span>
-        <div>
-          <h1>ComicForge</h1>
-          <p class="tagline">Admin — Your comic creation tracker</p>
-        </div>
-      </div>
-      <div class="header-actions">
-        <button class="btn btn-share" id="copyViewLink">🔗 Copy Viewer Link</button>
-        <button class="btn btn-reset" id="resetBtn">🗑️ Reset All</button>
+  <!-- Ambient background -->
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-mark">CF</span>
+      <div>
+        <span class="logo-title">ComicForge</span>
+        <span class="logo-sub">Studio</span>
       </div>
     </div>
-  </header>
 
-  <main>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-section="all">
+        <span class="nav-icon">⊞</span> All Books
+      </button>
+      <button class="nav-item" data-section="recent">
+        <span class="nav-icon">🕐</span> Recent <span class="nav-badge" id="recentBadge">0</span>
+      </button>
+      <button class="nav-item" data-section="inprogress">
+        <span class="nav-icon">◑</span> In Progress
+      </button>
+      <button class="nav-item" data-section="completed">
+        <span class="nav-icon">✓</span> Completed
+      </button>
+    </nav>
 
-    <div class="admin-banner">🔒 You are in <strong>Admin Mode</strong> — only you should use this page. Share <strong>view.html</strong> with others.</div>
+    <div class="sidebar-stats">
+      <div class="sstat">
+        <span class="sstat-num" id="statBooks">0</span>
+        <span class="sstat-label">Books</span>
+      </div>
+      <div class="sstat">
+        <span class="sstat-num" id="statChapters">0</span>
+        <span class="sstat-label">Chapters</span>
+      </div>
+      <div class="sstat">
+        <span class="sstat-num" id="statDone">0</span>
+        <span class="sstat-label">Done</span>
+      </div>
+    </div>
 
-    <section class="add-book-section">
-      <div class="add-book-card">
-        <h2>✨ Start a New Book</h2>
-        <div class="input-row">
-          <input type="text" id="bookTitleInput" placeholder="e.g. Shadow of Eternity..." maxlength="60" />
-          <input type="text" id="bookGenreInput" placeholder="Genre (e.g. Fantasy)" maxlength="30" />
-          <button class="btn btn-primary" id="addBookBtn">+ Add Book</button>
-        </div>
+    <div class="sidebar-actions">
+      <button class="btn-sidebar btn-sidebar-share" id="copyViewLink">🔗 Copy Viewer Link</button>
+      <button class="btn-sidebar btn-sidebar-reset" id="resetBtn">🗑 Reset All</button>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <div class="main-wrap">
+
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="page-title" id="pageTitle">All Books</h1>
+        <span class="page-subtitle" id="pageSubtitle">Your complete library</span>
+      </div>
+      <button class="btn-add-book" id="openAddBook">
+        <span>+</span> New Book
+      </button>
+    </header>
+
+    <!-- Recently Added strip (24 hrs) -->
+    <section class="recent-strip" id="recentStrip">
+      <div class="recent-strip-header">
+        <span class="recent-label">🕐 Added in last 24 hours</span>
+        <span class="recent-count" id="recentCount">0 items</span>
+      </div>
+      <div class="recent-pills" id="recentPills">
+        <!-- pills injected here -->
       </div>
     </section>
 
-    <div class="stats-bar">
-      <div class="stat"><span id="statBooks">0</span><label>Books</label></div>
-      <div class="stat-divider"></div>
-      <div class="stat"><span id="statChapters">0</span><label>Chapters</label></div>
-      <div class="stat-divider"></div>
-      <div class="stat"><span id="statDone">0</span><label>Done</label></div>
+    <!-- Loading -->
+    <div class="loading-state" id="loadingMsg">
+      <div class="loading-spinner"></div>
+      <span>Loading your library…</span>
     </div>
 
-    <div class="loading-msg" id="loadingMsg">⏳ Loading your books...</div>
-
+    <!-- Books Grid -->
     <section class="books-grid" id="booksGrid"></section>
 
+    <!-- Empty state -->
     <div class="empty-state" id="emptyState">
-      <div class="empty-icon">🎨</div>
-      <h3>No books yet!</h3>
-      <p>Add your first comic book above to get started.</p>
+      <div class="empty-art">📚</div>
+      <h3>Nothing here yet</h3>
+      <p>Hit <strong>+ New Book</strong> to start your first comic.</p>
     </div>
 
-  </main>
+  </div>
+
+  <!-- Add Book Drawer -->
+  <div class="drawer-overlay" id="drawerOverlay">
+    <div class="drawer" id="addBookDrawer">
+      <div class="drawer-header">
+        <h2>New Book</h2>
+        <button class="drawer-close" id="drawerClose">✕</button>
+      </div>
+      <div class="drawer-body">
+        <label class="field-label">Book Title *</label>
+        <input class="field-input" type="text" id="bookTitleInput" placeholder="e.g. Shadows of Eternity" maxlength="60"/>
+        <label class="field-label">Genre</label>
+        <input class="field-input" type="text" id="bookGenreInput" placeholder="e.g. Fantasy, Sci-Fi, Horror" maxlength="30"/>
+        <label class="field-label">Cover Color</label>
+        <div class="color-swatches" id="colorSwatches"></div>
+        <button class="btn-drawer-submit" id="addBookBtn">Create Book →</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Chapter Modal -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
       <button class="modal-close" id="modalClose">✕</button>
       <div class="modal-header">
-        <span class="modal-book-icon">📚</span>
+        <div class="modal-book-chip" id="modalBookChip"></div>
         <div>
-          <p class="modal-label">Adding chapter to</p>
-          <h2 class="modal-book-title" id="modalBookTitle">Book Name</h2>
+          <p class="modal-label">Add chapter to</p>
+          <h2 class="modal-book-title" id="modalBookTitle">—</h2>
         </div>
       </div>
       <div class="modal-body">
-        <input type="text" id="chapterInput" placeholder="Chapter name or number..." maxlength="80"/>
-        <button class="btn btn-primary" id="addChapterBtn">+ Add Chapter</button>
+        <input class="field-input" type="text" id="chapterInput" placeholder="Chapter title or number…" maxlength="80"/>
+        <button class="btn-drawer-submit" id="addChapterBtn">Add Chapter →</button>
       </div>
     </div>
   </div>
 
+  <!-- Toast -->
   <div class="toast" id="toast"></div>
 
   <script type="module" src="script.js"></script>
