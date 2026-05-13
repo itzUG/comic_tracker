@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ComicForge — Viewer</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">📖</span>
+        <div>
+          <h1>ComicForge</h1>
+          <p class="tagline">Comic creation progress — read only</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <div class="viewer-banner">👀 You are in <strong>Viewer Mode</strong> — you can see the progress but cannot make changes.</div>
+
+    <div class="stats-bar">
+      <div class="stat"><span id="statBooks">0</span><label>Books</label></div>
+      <div class="stat-divider"></div>
+      <div class="stat"><span id="statChapters">0</span><label>Chapters</label></div>
+      <div class="stat-divider"></div>
+      <div class="stat"><span id="statDone">0</span><label>Done</label></div>
+    </div>
+
+    <div class="loading-msg" id="loadingMsg">⏳ Loading books...</div>
+
+    <section class="books-grid" id="booksGrid"></section>
+
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">🎨</div>
+      <h3>Nothing here yet!</h3>
+      <p>The creator hasn't added any books yet.</p>
+    </div>
+
+  </main>
+
+  <script type="module" src="viewer.js"></script>
+</body>
+</html>
