@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ComicForge — My Book Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">📖</span>
+        <div>
+          <h1>ComicForge</h1>
+          <p class="tagline">Your personal comic creation tracker</p>
+        </div>
+      </div>
+      <button class="btn btn-reset" id="resetBtn">🗑️ Reset All</button>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main>
+
+    <!-- Add Book -->
+    <section class="add-book-section">
+      <div class="add-book-card">
+        <h2>✨ Start a New Book</h2>
+        <div class="input-row">
+          <input type="text" id="bookTitleInput" placeholder="e.g. Shadow of Eternity..." maxlength="60" />
+          <input type="text" id="bookGenreInput" placeholder="Genre (e.g. Fantasy)" maxlength="30" />
+          <button class="btn btn-primary" id="addBookBtn">+ Add Book</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar" id="statsBar">
+      <div class="stat"><span id="statBooks">0</span><label>Books</label></div>
+      <div class="stat-divider"></div>
+      <div class="stat"><span id="statChapters">0</span><label>Chapters</label></div>
+      <div class="stat-divider"></div>
+      <div class="stat"><span id="statDone">0</span><label>Done</label></div>
+    </div>
+
+    <!-- Books Grid -->
+    <section class="books-grid" id="booksGrid">
+      <!-- Dynamically populated -->
+    </section>
+
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">🎨</div>
+      <h3>No books yet!</h3>
+      <p>Add your first comic book above to get started.</p>
+    </div>
+
+  </main>
+
+  <!-- Chapter Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="chapterModal">
+      <button class="modal-close" id="modalClose">✕</button>
+      <div class="modal-header">
+        <span class="modal-book-icon">📚</span>
+        <div>
+          <p class="modal-label">Adding chapter to</p>
+          <h2 class="modal-book-title" id="modalBookTitle">Book Name</h2>
+        </div>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="chapterInput" placeholder="Chapter name or number..." maxlength="80"/>
+        <button class="btn btn-primary" id="addChapterBtn">+ Add Chapter</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
