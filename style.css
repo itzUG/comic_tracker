@@ -521,6 +521,7 @@ body {
   transform: rotate(45deg);
 }
 .chapter-checkbox.readonly { cursor: default; pointer-events: none; }
+.chapter-checkbox:disabled { opacity: 1; cursor: default; }
 
 .chapter-name {
   font-size: 0.84rem;
@@ -798,6 +799,60 @@ body {
   max-width: 1100px; margin: 0 auto;
   padding: 28px 24px 60px;
   position: relative; z-index: 1;
+}
+
+.viewer-mode .nav-item {
+  cursor: default;
+  pointer-events: none;
+}
+
+.viewer-mode .nav-item:hover {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.viewer-mode .nav-item.active:hover {
+  background: var(--amber-glow);
+  color: var(--amber);
+}
+
+.viewer-mode .book-card:hover {
+  border-color: var(--border);
+  transform: none;
+  box-shadow: var(--shadow-card);
+}
+
+.viewer-readonly-note,
+.viewer-lock-pill,
+.viewer-card-note {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.viewer-readonly-note {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  text-align: center;
+}
+
+.viewer-lock-pill {
+  padding: 10px 14px;
+  border: 1px solid rgba(245,166,35,0.25);
+  border-radius: 99px;
+  color: var(--amber);
+  background: var(--amber-glow);
+}
+
+.viewer-card-note {
+  text-align: center;
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 /* ---------- Responsive ---------- */
