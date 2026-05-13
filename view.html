@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ComicForge — Progress</title>
+  <title>ComicForge - Viewer</title>
   <link rel="stylesheet" href="style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet"/>
 </head>
-<body>
+<body class="viewer-mode">
 
   <div class="bg-orbs">
     <div class="orb orb-1"></div>
@@ -15,30 +15,54 @@
     <div class="orb orb-3"></div>
   </div>
 
-  <!-- Viewer has no sidebar — just a slim top nav -->
-  <header class="viewer-topnav">
-    <div class="viewer-nav-inner">
-      <div class="sidebar-logo" style="gap:10px">
-        <span class="logo-mark" style="width:34px;height:34px;font-size:0.8rem">CF</span>
-        <div>
-          <span class="logo-title" style="font-size:1rem">ComicForge</span>
-          <span class="logo-sub">Viewer — Read Only</span>
-        </div>
-      </div>
-      <div class="viewer-stats-row">
-        <span class="vstats"><b id="statBooks">0</b> Books</span>
-        <span class="vstats"><b id="statChapters">0</b> Chapters</span>
-        <span class="vstats"><b id="statDone">0</b> Done</span>
+  <aside class="sidebar viewer-sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-mark">CF</span>
+      <div>
+        <span class="logo-title">ComicForge</span>
+        <span class="logo-sub">Viewer</span>
       </div>
     </div>
-  </header>
 
-  <div class="viewer-main">
+    <nav class="sidebar-nav">
+      <div class="nav-item active">
+        <span class="nav-icon">All</span> All Books
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon">New</span> Recent <span class="nav-badge" id="recentBadge">0</span>
+      </div>
+    </nav>
 
-    <!-- Recently Added strip -->
+    <div class="sidebar-stats">
+      <div class="sstat">
+        <span class="sstat-num" id="statBooks">0</span>
+        <span class="sstat-label">Books</span>
+      </div>
+      <div class="sstat">
+        <span class="sstat-num" id="statChapters">0</span>
+        <span class="sstat-label">Chapters</span>
+      </div>
+      <div class="sstat">
+        <span class="sstat-num" id="statDone">0</span>
+        <span class="sstat-label">Done</span>
+      </div>
+    </div>
+
+    <div class="viewer-readonly-note">Read only</div>
+  </aside>
+
+  <div class="main-wrap">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="page-title">All Books</h1>
+        <span class="page-subtitle">Library progress, view only</span>
+      </div>
+      <div class="viewer-lock-pill">No changes allowed</div>
+    </header>
+
     <section class="recent-strip" id="recentStrip">
       <div class="recent-strip-header">
-        <span class="recent-label">🕐 Added in last 24 hours</span>
+        <span class="recent-label">Added in last 24 hours</span>
         <span class="recent-count" id="recentCount">0 items</span>
       </div>
       <div class="recent-pills" id="recentPills"></div>
@@ -46,17 +70,16 @@
 
     <div class="loading-state" id="loadingMsg">
       <div class="loading-spinner"></div>
-      <span>Loading library…</span>
+      <span>Loading library...</span>
     </div>
 
     <section class="books-grid" id="booksGrid"></section>
 
     <div class="empty-state" id="emptyState">
-      <div class="empty-art">📚</div>
+      <div class="empty-art">Books</div>
       <h3>Nothing published yet</h3>
-      <p>Check back soon!</p>
+      <p>Check back soon.</p>
     </div>
-
   </div>
 
   <script type="module" src="viewer.js"></script>
