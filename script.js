@@ -184,7 +184,7 @@ document.getElementById('resetBtn').addEventListener('click', async () => {
 
 // ── Copy viewer link ──
 document.getElementById('copyViewLink').addEventListener('click', () => {
-  const url = window.location.href.replace('index.html', 'view.html');
+  const url = new URL('view.html', window.location.href).href;
   navigator.clipboard.writeText(url).then(() => showToast('🔗 Viewer link copied!'));
 });
 
