@@ -1,198 +1,172 @@
 // =============================================
-//   ComicForge — script.js
-//   All data is saved in localStorage.
-//   Structure: { books: [ { id, title, genre, chapters: [{id, name, done}] } ] }
+//   ComicForge — script.js (ADMIN)
+//   Reads & writes to Firebase Firestore.
 // =============================================
 
-// ── Palette for book card spine colours (cycles) ──
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore, collection, doc,
+  onSnapshot, addDoc, updateDoc, deleteDoc,
+  arrayUnion, arrayRemove, setDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ── Firebase Config ──
+const firebaseConfig = {
+  apiKey: "AIzaSyCCl8vbv8GeUg6uuDhNzDHshgnBPLhnQRA",
+  authDomain: "comictracker-b5db3.firebaseapp.com",
+  projectId: "comictracker-b5db3",
+  storageBucket: "comictracker-b5db3.firebasestorage.app",
+  messagingSenderId: "495825637844",
+  appId: "1:495825637844:web:e99d114b2253aae200c641"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+const booksCol = collection(db, "books");
+
+// ── Spine colours ──
 const SPINE_COLORS = [
-  '#e8472a', '#9b8ec4', '#f0b429', '#3dbf8a',
-  '#4a90d9', '#e86ba2', '#5bc8af', '#f76b1c'
+  '#e8472a','#9b8ec4','#f0b429','#3dbf8a',
+  '#4a90d9','#e86ba2','#5bc8af','#f76b1c'
 ];
 
-// ── State ──
-let data = loadData();
-let activeBookId = null; // which book the modal is editing
+let allBooks = [];   // local mirror of Firestore data
+let activeBookId = null;
 
-// ── On Page Load ──
-renderAll();
+// ── Real-time listener ──
+onSnapshot(booksCol, (snapshot) => {
+  allBooks = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  // Sort by createdAt descending (newest first)
+  allBooks.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  renderAll();
+  document.getElementById('loadingMsg').classList.add('hidden');
+});
 
 // ── Event Listeners ──
-
-// Add Book
 document.getElementById('addBookBtn').addEventListener('click', addBook);
-document.getElementById('bookTitleInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') addBook();
-});
-
-// Reset All
-document.getElementById('resetBtn').addEventListener('click', () => {
-  if (confirm('Reset everything? This will delete all books and chapters.')) {
-    data = { books: [] };
-    saveData();
-    renderAll();
+document.getElementById('bookTitleInput').addEventListener('keydown', e => { if (e.key === 'Enter') addBook(); });
+document.getElementById('resetBtn').addEventListener('click', async () => {
+  if (!confirm('Delete ALL books and chapters? This cannot be undone.')) return;
+  for (const book of allBooks) {
+    await deleteDoc(doc(db, 'books', book.id));
   }
+  showToast('🗑️ All data cleared!');
 });
-
-// Modal: Close
+document.getElementById('copyViewLink').addEventListener('click', () => {
+  // Build viewer URL based on current page location
+  const viewUrl = window.location.href.replace('index.html', 'view.html').replace(/\/$/, '/view.html');
+  navigator.clipboard.writeText(viewUrl).then(() => showToast('🔗 Viewer link copied!'));
+});
 document.getElementById('modalClose').addEventListener('click', closeModal);
-document.getElementById('modalOverlay').addEventListener('click', (e) => {
+document.getElementById('modalOverlay').addEventListener('click', e => {
   if (e.target === document.getElementById('modalOverlay')) closeModal();
 });
-
-// Modal: Add Chapter
 document.getElementById('addChapterBtn').addEventListener('click', addChapter);
-document.getElementById('chapterInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') addChapter();
-});
+document.getElementById('chapterInput').addEventListener('keydown', e => { if (e.key === 'Enter') addChapter(); });
 
-// ── Functions ──
-
-function loadData() {
-  try {
-    const stored = localStorage.getItem('comicforge_data');
-    return stored ? JSON.parse(stored) : { books: [] };
-  } catch {
-    return { books: [] };
-  }
-}
-
-function saveData() {
-  localStorage.setItem('comicforge_data', JSON.stringify(data));
-}
-
-function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-}
-
-function addBook() {
+// ── Add Book ──
+async function addBook() {
   const titleInput = document.getElementById('bookTitleInput');
   const genreInput = document.getElementById('bookGenreInput');
-
   const title = titleInput.value.trim();
   if (!title) {
-    titleInput.focus();
     titleInput.style.borderColor = '#e8472a';
     setTimeout(() => titleInput.style.borderColor = '', 1000);
+    titleInput.focus();
     return;
   }
-
-  const book = {
-    id: generateId(),
+  await addDoc(booksCol, {
     title,
     genre: genreInput.value.trim() || 'Uncategorized',
     chapters: [],
-    colorIndex: data.books.length % SPINE_COLORS.length
-  };
-
-  data.books.unshift(book); // newest first
-  saveData();
-
+    colorIndex: allBooks.length % SPINE_COLORS.length,
+    createdAt: Date.now()
+  });
   titleInput.value = '';
   genreInput.value = '';
   titleInput.focus();
-
-  renderAll();
+  showToast('📖 Book added!');
 }
 
-function deleteBook(bookId) {
+// ── Delete Book ──
+async function deleteBook(bookId) {
   if (!confirm('Delete this book and all its chapters?')) return;
-  data.books = data.books.filter(b => b.id !== bookId);
-  saveData();
-  renderAll();
+  await deleteDoc(doc(db, 'books', bookId));
+  showToast('🗑️ Book deleted.');
 }
 
+// ── Modal ──
 function openModal(bookId) {
   activeBookId = bookId;
-  const book = data.books.find(b => b.id === bookId);
+  const book = allBooks.find(b => b.id === bookId);
   document.getElementById('modalBookTitle').textContent = book.title;
   document.getElementById('chapterInput').value = '';
   document.getElementById('modalOverlay').classList.add('open');
   setTimeout(() => document.getElementById('chapterInput').focus(), 80);
 }
-
 function closeModal() {
   document.getElementById('modalOverlay').classList.remove('open');
   activeBookId = null;
 }
 
-function addChapter() {
+// ── Add Chapter ──
+async function addChapter() {
   if (!activeBookId) return;
   const input = document.getElementById('chapterInput');
   const name = input.value.trim();
   if (!name) {
-    input.focus();
     input.style.borderColor = '#e8472a';
     setTimeout(() => input.style.borderColor = '', 1000);
+    input.focus();
     return;
   }
-
-  const book = data.books.find(b => b.id === activeBookId);
-  if (!book) return;
-
-  book.chapters.push({ id: generateId(), name, done: false });
-  saveData();
+  const newChapter = { id: generateId(), name, done: false };
+  const bookRef = doc(db, 'books', activeBookId);
+  await updateDoc(bookRef, { chapters: arrayUnion(newChapter) });
   input.value = '';
   input.focus();
-
-  // Re-render just this book card + stats
-  renderBookCard(book);
-  updateStats();
+  showToast('✅ Chapter added!');
 }
 
-function toggleChapter(bookId, chapterId) {
-  const book = data.books.find(b => b.id === bookId);
+// ── Toggle Chapter Done ──
+async function toggleChapter(bookId, chapterId) {
+  const book = allBooks.find(b => b.id === bookId);
   if (!book) return;
-  const ch = book.chapters.find(c => c.id === chapterId);
-  if (!ch) return;
-  ch.done = !ch.done;
-  saveData();
-  renderBookCard(book);
-  updateStats();
+  const updatedChapters = book.chapters.map(ch =>
+    ch.id === chapterId ? { ...ch, done: !ch.done } : ch
+  );
+  await updateDoc(doc(db, 'books', bookId), { chapters: updatedChapters });
 }
 
-function deleteChapter(bookId, chapterId) {
-  const book = data.books.find(b => b.id === bookId);
+// ── Delete Chapter ──
+async function deleteChapter(bookId, chapterId) {
+  const book = allBooks.find(b => b.id === bookId);
   if (!book) return;
-  book.chapters = book.chapters.filter(c => c.id !== chapterId);
-  saveData();
-  renderBookCard(book);
-  updateStats();
+  const updatedChapters = book.chapters.filter(ch => ch.id !== chapterId);
+  await updateDoc(doc(db, 'books', bookId), { chapters: updatedChapters });
+  showToast('🗑️ Chapter removed.');
 }
 
 // ── Render All ──
 function renderAll() {
   const grid = document.getElementById('booksGrid');
   const emptyState = document.getElementById('emptyState');
-
   grid.innerHTML = '';
 
-  if (data.books.length === 0) {
+  if (allBooks.length === 0) {
     emptyState.classList.add('visible');
   } else {
     emptyState.classList.remove('visible');
-    data.books.forEach(book => {
-      const card = buildBookCard(book);
-      grid.appendChild(card);
-    });
+    allBooks.forEach(book => grid.appendChild(buildBookCard(book)));
   }
-
   updateStats();
 }
 
-// Re-render a single book card in place (for chapter changes)
-function renderBookCard(book) {
-  const existing = document.querySelector(`[data-book-id="${book.id}"]`);
-  if (!existing) return;
-  const newCard = buildBookCard(book);
-  existing.replaceWith(newCard);
-}
-
 function buildBookCard(book) {
-  const totalChapters = book.chapters.length;
-  const doneChapters  = book.chapters.filter(c => c.done).length;
-  const progress      = totalChapters > 0 ? Math.round((doneChapters / totalChapters) * 100) : 0;
-  const spineColor    = SPINE_COLORS[book.colorIndex % SPINE_COLORS.length];
+  const total    = book.chapters.length;
+  const done     = book.chapters.filter(c => c.done).length;
+  const progress = total > 0 ? Math.round((done / total) * 100) : 0;
+  const color    = SPINE_COLORS[(book.colorIndex || 0) % SPINE_COLORS.length];
 
   const card = document.createElement('div');
   card.className = 'book-card';
@@ -201,7 +175,7 @@ function buildBookCard(book) {
   // Spine
   const spine = document.createElement('div');
   spine.className = 'book-card-spine';
-  spine.style.background = spineColor;
+  spine.style.background = color;
   card.appendChild(spine);
 
   // Header
@@ -209,8 +183,8 @@ function buildBookCard(book) {
   header.className = 'book-card-header';
   header.innerHTML = `
     <div class="book-info">
-      <div class="book-title">${escapeHtml(book.title)}</div>
-      <span class="book-genre">${escapeHtml(book.genre)}</span>
+      <div class="book-title">${escHtml(book.title)}</div>
+      <span class="book-genre">${escHtml(book.genre)}</span>
     </div>
     <button class="book-delete-btn" title="Delete book">🗑</button>
   `;
@@ -218,23 +192,19 @@ function buildBookCard(book) {
   card.appendChild(header);
 
   // Progress
-  const progressWrap = document.createElement('div');
-  progressWrap.className = 'book-progress-wrap';
-  progressWrap.innerHTML = `
+  const prog = document.createElement('div');
+  prog.className = 'book-progress-wrap';
+  prog.innerHTML = `
     <div class="book-progress-label">
-      <span>Progress</span>
-      <span>${doneChapters}/${totalChapters} chapters</span>
+      <span>Progress</span><span>${done}/${total} chapters</span>
     </div>
-    <div class="progress-bar-bg">
-      <div class="progress-bar-fill" style="width:${progress}%"></div>
-    </div>
+    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${progress}%"></div></div>
   `;
-  card.appendChild(progressWrap);
+  card.appendChild(prog);
 
-  // Chapter list
+  // Chapters
   const list = document.createElement('div');
   list.className = 'chapter-list';
-
   if (book.chapters.length === 0) {
     list.innerHTML = `<p class="chapters-empty">No chapters yet — add one below!</p>`;
   } else {
@@ -242,27 +212,12 @@ function buildBookCard(book) {
       const item = document.createElement('div');
       item.className = 'chapter-item';
       item.innerHTML = `
-        <input
-          type="checkbox"
-          class="chapter-checkbox"
-          data-id="${ch.id}"
-          ${ch.done ? 'checked' : ''}
-          title="Mark as done"
-        />
-        <span class="chapter-name ${ch.done ? 'done' : ''}">${escapeHtml(ch.name)}</span>
-        <button class="chapter-delete-btn" title="Delete chapter">✕</button>
+        <input type="checkbox" class="chapter-checkbox" ${ch.done ? 'checked' : ''} title="Mark as done"/>
+        <span class="chapter-name ${ch.done ? 'done' : ''}">${escHtml(ch.name)}</span>
+        <button class="chapter-delete-btn" title="Delete">✕</button>
       `;
-
-      // Checkbox toggle
-      item.querySelector('.chapter-checkbox').addEventListener('change', () => {
-        toggleChapter(book.id, ch.id);
-      });
-
-      // Delete chapter
-      item.querySelector('.chapter-delete-btn').addEventListener('click', () => {
-        deleteChapter(book.id, ch.id);
-      });
-
+      item.querySelector('.chapter-checkbox').addEventListener('change', () => toggleChapter(book.id, ch.id));
+      item.querySelector('.chapter-delete-btn').addEventListener('click', () => deleteChapter(book.id, ch.id));
       list.appendChild(item);
     });
   }
@@ -271,31 +226,35 @@ function buildBookCard(book) {
   // Footer
   const footer = document.createElement('div');
   footer.className = 'book-card-footer';
-  const addBtn = document.createElement('button');
-  addBtn.className = 'add-chapter-btn';
-  addBtn.textContent = '+ Add Chapter';
-  addBtn.addEventListener('click', () => openModal(book.id));
-  footer.appendChild(addBtn);
+  const btn = document.createElement('button');
+  btn.className = 'add-chapter-btn';
+  btn.textContent = '+ Add Chapter';
+  btn.addEventListener('click', () => openModal(book.id));
+  footer.appendChild(btn);
   card.appendChild(footer);
 
   return card;
 }
 
 function updateStats() {
-  const totalBooks    = data.books.length;
-  const totalChapters = data.books.reduce((s, b) => s + b.chapters.length, 0);
-  const totalDone     = data.books.reduce((s, b) => s + b.chapters.filter(c => c.done).length, 0);
-
-  document.getElementById('statBooks').textContent    = totalBooks;
-  document.getElementById('statChapters').textContent = totalChapters;
-  document.getElementById('statDone').textContent     = totalDone;
+  document.getElementById('statBooks').textContent    = allBooks.length;
+  document.getElementById('statChapters').textContent = allBooks.reduce((s,b) => s + b.chapters.length, 0);
+  document.getElementById('statDone').textContent     = allBooks.reduce((s,b) => s + b.chapters.filter(c=>c.done).length, 0);
 }
 
-function escapeHtml(str) {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
