@@ -129,6 +129,7 @@ document.getElementById('modalOverlay').addEventListener('click', e => {
 });
 document.getElementById('addChapterBtn').addEventListener('click', addChapter);
 document.getElementById('chapterInput').addEventListener('keydown', e => { if (e.key === 'Enter') addChapter(); });
+document.getElementById('originalChapterInput').addEventListener('keydown', e => { if (e.key === 'Enter') addChapter(); });
 
 function openModal(bookId) {
   activeBookId = bookId;
@@ -136,6 +137,7 @@ function openModal(bookId) {
   document.getElementById('modalBookTitle').textContent = book.title;
   document.getElementById('modalBookChip').style.background = book.color || COLORS[0];
   document.getElementById('chapterInput').value = '';
+  document.getElementById('originalChapterInput').value = '';
   document.getElementById('modalOverlay').classList.add('open');
   setTimeout(() => document.getElementById('chapterInput').focus(), 80);
 }
@@ -147,19 +149,66 @@ function closeModal() {
 async function addChapter() {
   if (!activeBookId) return;
   const input = document.getElementById('chapterInput');
+  const originalInput = document.getElementById('originalChapterInput');
   const name = input.value.trim();
+  const originalName = originalInput.value.trim();
   if (!name) { shake(input); return; }
 
   const book = allBooks.find(b => b.id === activeBookId);
-  const newChapter = { id: genId(), name, done: false, createdAt: Date.now() };
+  const newChapter = { id: genId(), name, originalName, done: false, createdAt: Date.now() };
   const updated = [...(book.chapters || []), newChapter];
   await updateDoc(doc(db, 'books', activeBookId), { chapters: updated });
   input.value = '';
+  originalInput.value = '';
   input.focus();
   showToast('✅ Chapter added!');
 }
 
 // ── Toggle / Delete Chapter ──
+async function editBookTitle(bookId) {
+  const book = allBooks.find(b => b.id === bookId);
+  if (!book) return;
+
+  const title = prompt('Book name', book.title || '');
+  if (title === null) return;
+
+  const nextTitle = title.trim();
+  if (!nextTitle) {
+    alert('Book name cannot be empty.');
+    return;
+  }
+
+  await updateDoc(doc(db, 'books', bookId), { title: nextTitle });
+  showToast('Book name updated.');
+}
+
+async function editChapter(bookId, chapterId) {
+  const book = allBooks.find(b => b.id === bookId);
+  const chapter = book?.chapters?.find(c => c.id === chapterId);
+  if (!book || !chapter) return;
+
+  const name = prompt('Chapter name', chapter.name || '');
+  if (name === null) return;
+
+  const nextName = name.trim();
+  if (!nextName) {
+    alert('Chapter name cannot be empty.');
+    return;
+  }
+
+  const originalName = prompt('Original chapter name (optional)', chapter.originalName || '');
+  if (originalName === null) return;
+
+  const chapters = (book.chapters || []).map(c =>
+    c.id === chapterId
+      ? { ...c, name: nextName, originalName: originalName.trim() }
+      : c
+  );
+
+  await updateDoc(doc(db, 'books', bookId), { chapters });
+  showToast('Chapter updated.');
+}
+
 async function toggleChapter(bookId, chapterId) {
   const book = allBooks.find(b => b.id === bookId);
   const chapters = book.chapters.map(c =>
@@ -296,14 +345,19 @@ function buildBookCard(book, cutoff) {
   header.className = 'book-card-header';
   header.innerHTML = `
     <div class="book-info">
+      <div class="book-field-label">Book Name</div>
       <div class="book-title">${escHtml(book.title)}</div>
       <div class="book-tags">
         <span class="book-genre">${escHtml(book.genre)}</span>
         ${isNew ? '<span class="book-new-tag">New</span>' : ''}
       </div>
     </div>
-    <button class="book-delete-btn" title="Delete book">✕</button>
+    <div class="book-actions">
+      <button class="book-edit-btn" title="Edit book name">Edit</button>
+      <button class="book-delete-btn" title="Delete book">x</button>
+    </div>
   `;
+  header.querySelector('.book-edit-btn').addEventListener('click', () => editBookTitle(book.id));
   header.querySelector('.book-delete-btn').addEventListener('click', () => deleteBook(book.id));
   card.appendChild(header);
 
@@ -331,13 +385,23 @@ function buildBookCard(book, cutoff) {
       const item = document.createElement('div');
       item.className = 'chapter-item';
       const chIsNew = ch.createdAt && ch.createdAt > cutoff;
+      const originalName = (ch.originalName || '').trim();
       item.innerHTML = `
         <input type="checkbox" class="chapter-checkbox" ${ch.done ? 'checked' : ''}/>
-        <span class="chapter-name ${ch.done ? 'done' : ''}">${escHtml(ch.name)}</span>
+        <div class="chapter-copy">
+          <span class="chapter-label">Chapter Name</span>
+          <span class="chapter-name ${ch.done ? 'done' : ''}">${escHtml(ch.name)}</span>
+          ${originalName ? `
+            <span class="chapter-label">Original Chapter Name</span>
+            <span class="chapter-original ${ch.done ? 'done' : ''}">${escHtml(originalName)}</span>
+          ` : ''}
+        </div>
         ${chIsNew ? `<span class="chapter-time" style="color:var(--amber)">new</span>` : (ch.createdAt ? `<span class="chapter-time">${timeAgo(ch.createdAt)}</span>` : '')}
-        <button class="chapter-delete-btn">✕</button>
+        <button class="chapter-edit-btn" title="Edit chapter">Edit</button>
+        <button class="chapter-delete-btn">x</button>
       `;
       item.querySelector('.chapter-checkbox').addEventListener('change', () => toggleChapter(book.id, ch.id));
+      item.querySelector('.chapter-edit-btn').addEventListener('click', () => editChapter(book.id, ch.id));
       item.querySelector('.chapter-delete-btn').addEventListener('click', () => deleteChapter(book.id, ch.id));
       list.appendChild(item);
     });
