@@ -399,6 +399,16 @@ body {
 
 .book-info { flex: 1; min-width: 0; }
 
+.book-field-label {
+  color: var(--text-muted);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  margin-bottom: 3px;
+  text-transform: uppercase;
+}
+
 .book-title {
   font-family: var(--font-serif);
   font-size: 1.05rem;
@@ -436,14 +446,25 @@ body {
   border: 1px solid rgba(245,166,35,0.3);
 }
 
+.book-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.book-edit-btn,
 .book-delete-btn {
   background: none; border: none; cursor: pointer;
-  color: var(--text-muted); font-size: 0.9rem;
+  color: var(--text-muted); font-size: 0.72rem;
   padding: 4px 6px; border-radius: var(--radius-xs);
   transition: all 0.15s; flex-shrink: 0;
   opacity: 0;
 }
+.book-card:hover .book-edit-btn,
 .book-card:hover .book-delete-btn { opacity: 1; }
+.book-edit-btn { opacity: 1; }
+.book-edit-btn:hover { color: var(--amber); background: var(--amber-glow); }
 .book-delete-btn:hover { color: var(--rose); background: rgba(251,113,133,0.1); }
 
 /* Progress */
@@ -483,7 +504,7 @@ body {
 
 .chapter-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   padding: 7px 4px;
   border-radius: var(--radius-xs);
@@ -508,6 +529,7 @@ body {
   position: relative;
   transition: all 0.18s;
   background: transparent;
+  margin-top: 3px;
 }
 .chapter-checkbox:hover { border-color: var(--text-muted); }
 .chapter-checkbox:checked { background: var(--green); border-color: var(--green); }
@@ -523,15 +545,38 @@ body {
 .chapter-checkbox.readonly { cursor: default; pointer-events: none; }
 .chapter-checkbox:disabled { opacity: 1; cursor: default; }
 
-.chapter-name {
+.chapter-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.chapter-label {
+  color: var(--text-muted);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.chapter-name,
+.chapter-original {
   font-size: 0.84rem;
   color: var(--text-secondary);
-  flex: 1;
   font-weight: 400;
+  line-height: 1.25;
   transition: color 0.18s;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.chapter-name.done { color: var(--text-muted); text-decoration: line-through; }
+.chapter-original {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+}
+.chapter-name.done,
+.chapter-original.done { color: var(--text-muted); text-decoration: line-through; }
 
 /* Timestamp on chapter */
 .chapter-time {
@@ -541,13 +586,18 @@ body {
   white-space: nowrap;
 }
 
+.chapter-edit-btn,
 .chapter-delete-btn {
   background: none; border: none; cursor: pointer;
   color: var(--text-muted); font-size: 0.7rem;
   padding: 3px 5px; border-radius: 4px;
   transition: all 0.15s; opacity: 0; flex-shrink: 0;
+  margin-top: 1px;
 }
+.chapter-item:hover .chapter-edit-btn,
 .chapter-item:hover .chapter-delete-btn { opacity: 1; }
+.chapter-edit-btn { opacity: 1; }
+.chapter-edit-btn:hover { color: var(--amber); background: var(--amber-glow); }
 .chapter-delete-btn:hover { color: var(--rose); background: rgba(251,113,133,0.1); }
 
 .chapters-empty {
