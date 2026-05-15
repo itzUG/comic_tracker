@@ -126,6 +126,7 @@ function buildBookCard(book, cutoff) {
   header.className = 'book-card-header';
   header.innerHTML = `
     <div class="book-info">
+      <div class="book-field-label">Book Name</div>
       <div class="book-title">${escHtml(book.title)}</div>
       <div class="book-tags">
         <span class="book-genre">${escHtml(book.genre || 'Uncategorized')}</span>
@@ -157,10 +158,18 @@ function buildBookCard(book, cutoff) {
     book.chapters.forEach(chapter => {
       const item = document.createElement('div');
       const isChapterNew = chapter.createdAt && chapter.createdAt > cutoff;
+      const originalName = (chapter.originalName || '').trim();
       item.className = 'chapter-item';
       item.innerHTML = `
         <input type="checkbox" class="chapter-checkbox readonly" ${chapter.done ? 'checked' : ''} disabled/>
-        <span class="chapter-name ${chapter.done ? 'done' : ''}">${escHtml(chapter.name)}</span>
+        <div class="chapter-copy">
+          <span class="chapter-label">Chapter Name</span>
+          <span class="chapter-name ${chapter.done ? 'done' : ''}">${escHtml(chapter.name)}</span>
+          ${originalName ? `
+            <span class="chapter-label">Original Chapter Name</span>
+            <span class="chapter-original ${chapter.done ? 'done' : ''}">${escHtml(originalName)}</span>
+          ` : ''}
+        </div>
         ${isChapterNew ? '<span class="chapter-time" style="color:var(--amber)">new</span>' : (chapter.createdAt ? `<span class="chapter-time">${timeAgo(chapter.createdAt)}</span>` : '')}
       `;
       list.appendChild(item);
